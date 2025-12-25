@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PlatShift SalesForce Chatbot</title>
+
+<style>
+/* =========================
+   GLOBAL
+========================= */
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: "Segoe UI", sans-serif;
+    background: #f4f6f9;
+}
+
+/* =========================
+   CHAT CARD (FIXED BOX)
+========================= */
+.chat-container {
+    width: 90%;
+    max-width: 1100px;
+    height: 620px;                 /* ✅ FIXED CARD HEIGHT */
+    margin: 40px auto;
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* =========================
+   HEADER
+========================= */
+.chat-header {
+    padding: 20px;
+    font-size: 26px;
+    font-weight: 700;
+    text-align: center;
+    color: #1f3b57;
+    border-bottom: 1px solid #ddd;
+}
+
+/* =========================
+   CHAT BODY (SCROLLABLE)
+========================= */
+.chat-box {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    background: #ffffff;
+}
+
+/* =========================
+   USER MESSAGE
+========================= */
+.message.user {
+    max-width: 70%;
+    padding: 16px 22px;
+    margin-bottom: 14px;
+    border-radius: 14px;
+    background: #1f3b57;
+    color: #ffffff;
+    margin-left: auto;
+    font-size: 18px;
+    line-height: 1.5;
+}
+
+/* =========================
+   BOT MESSAGE
+========================= */
+.bot-wrapper {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 14px;
+    align-items: flex-start;
+}
+
+.bot-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: #1f7aff;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.message.bot {
+    max-width: 70%;
+    padding: 16px 22px;
+    border-radius: 14px;
+    background: #eef3f9;
+    color: #000000;
+    font-size: 18px;
+    line-height: 1.5;
+}
+
+/* =========================
+   INPUT AREA (FIXED BOTTOM)
+========================= */
+.chat-input {
+    padding: 14px;
+    border-top: 1px solid #ddd;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    background: #ffffff;
+}
+
+.chat-input input {
+    flex: 1;
+    padding: 14px 18px;
+    font-size: 18px;
+    height: 52px;
+    border-radius: 10px;
+    border: 1px solid #bbb;
+    outline: none;
+}
+
+/* =========================
+   BUTTONS
+========================= */
+.icon-btn {
+    width: 52px;
+    height: 52px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 22px;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.send-btn { background: #1f7aff; }
+.clear-btn { background: #ff4d4d; }
+</style>
+</head>
+
+<body>
+
+<div class="chat-container">
+    <div class="chat-header">PlatShift SalesForce Chatbot</div>
+    <div class="chat-box" id="chatBox"></div>
+
+    <div class="chat-input">
+        <input type="text" id="userInput" placeholder="Ask something..." />
+        <button class="icon-btn send-btn" onclick="sendMessage()">➤</button>
+        <button class="icon-btn clear-btn" onclick="clearChat()">✖</button>
+    </div>
+</div>
+
+<script>
+/* DATA */
+const DASHBOARD_DATA = {
+    total_objects: 14,
+    total_fields: 279,
+    total_picklists: 27,
+    total_custom_objects: 5,
+    total_standard_objects: 9,
+    total_custom_fields: 138,
+    total_standard_fields: 141,
+    total_custom_picklists: 8,
+    total_standard_picklists: 19,
+    total_picklist_value: 277,
+    total_custom_picklist_value: 228,
+    total_standard_picklist_values: 49,
+    total_profiles: 24,
+    total_user_privileges: 582,
+    total_application_privileges: 240,
+    total_class_privileges: 455,
+    total_tab_privileges: 1473,
+    total_page_privileges: 1080,
+    total_field_privileges: 5616,
+    total_object_privileges: 105,
+    total_license: 1,
+    total_access_rules: 51,
+    activated_permission_sets: 1,
+    total_permission_sets: 2,
+    total_triggers: 1,
+    total_active_workflow_rules: 19,
+    total_flow: 13,
+    total_alerts_sent: 4,
+    total_field_updates_made: 18,
+    total_active_flow: 13,
+    total_classes: 60,
+    total_custom_email_templates: 4,
+    total_validation_rules: 16,
+    total_pages: 53,
+    total_lightning_pages: 8,
+    total_visualforce_pages: 45,
+    total_external_systems: 6,
+    total_oauth_configurations: 12,
+    active_oauth_policies: 12,
+    total_jobs: 21,
+    total_standard_objects_v2: 3, 
+    total_counts: 11491,
+    total_unique_objects_counts: 6,
+    average_objects_created_per_month: 64.20,
+    total_custom_objects_v2: 3,
+    highest_monthly_counts: 2851,
+    average_count_per_year: 718.19,
+    average_count_per_quarter: 191.52,
+    total_reports_and_dashboards: 33,
+    total_reports: 28,
+    total_dashboards: 5,
+    total_task_type_activities: 2,
+    total_object_in_activities: 1,
+    total_email_type_activities: 27,
+    total_activities: 29
+    
+   
+};
+
+
+const METRICS = [
+  
+    { 
+        label: "objects", 
+        dataKey: "total_objects", 
+        keywords: ["object", "objects", "obj"] 
+    },
+    { 
+        label: "fields", 
+        dataKey: "total_fields", 
+        keywords: ["field", "fields"] 
+    },
+    { 
+        label: "picklists", 
+        dataKey: "total_picklists", 
+        keywords: ["picklist", "picklists"] 
+    },
+    { 
+        label: "custom objects", 
+        dataKey: "total_custom_objects", 
+        keywords: ["custom object", "custom objects"] 
+    },
+    { 
+        label: "standard objects", 
+        dataKey: "total_standard_objects", 
+        keywords: ["standard object", "standard objects"] 
+    },
+    { 
+        label: "custom fields", 
+        dataKey: "total_custom_fields", 
+        keywords: ["custom field", "custom fields"] 
+    },
+    { 
+        label: "standard fields", 
+        dataKey: "total_standard_fields", 
+        keywords: ["standard field", "standard fields"] 
+    },
+    { 
+        label: "custom picklists", 
+        dataKey: "total_custom_picklists", 
+        keywords: ["custom picklist", "custom picklists"] 
+    },
+    { 
+        label: "standard picklists", 
+        dataKey: "total_standard_picklists", 
+        keywords: ["standard picklist", "standard picklists"] 
+    },
+    { 
+        label: "picklist value", 
+        dataKey: "total_picklist_value", 
+        keywords: ["picklist value", "picklist values"] 
+    },
+    { 
+        label: "custom picklist value", 
+        dataKey: "total_custom_picklist_value", 
+        keywords: ["custom picklist value", "custom picklist values"] 
+    },
+    { 
+        label: "standard picklist values", 
+        dataKey: "total_standard_picklist_values", 
+        keywords: ["standard picklist value", "standard picklist values"] 
+    },
+    { 
+        label: "profiles", 
+        dataKey: "total_profiles", 
+        keywords: ["profile", "profiles"] 
+    },
+    { 
+        label: "user privileges", 
+        dataKey: "total_user_privileges", 
+        keywords: ["user privilege", "user privileges"] 
+    },
+    { 
+        label: "application privileges", 
+        dataKey: "total_application_privileges", 
+        keywords: ["application privilege", "app privileges"] 
+    },
+    { 
+        label: "class privileges", 
+        dataKey: "total_class_privileges", 
+        keywords: ["class privilege", "class privileges"] 
+    },
+    { 
+        label: "tab privileges", 
+        dataKey: "total_tab_privileges", 
+        keywords: ["tab privilege", "tab privileges"] 
+    },
+    { 
+        label: "page privileges", 
+        dataKey: "total_page_privileges", 
+        keywords: ["page privilege", "page privileges"] 
+    },
+    { 
+        label: "field privileges", 
+        dataKey: "total_field_privileges", 
+        keywords: ["field privilege", "field privileges"] 
+    },
+    { 
+        label: "object privileges", 
+        dataKey: "total_object_privileges", 
+        keywords: ["object privilege", "object privileges"] 
+    },
+    { 
+        label: "license", 
+        dataKey: "total_license", 
+        keywords: ["license", "licenses"] 
+    },
+    { 
+        label: "access rules", 
+        dataKey: "total_access_rules", 
+        keywords: ["access rule", "access rules"] 
+    },
+    { 
+        label: "activated permission sets", 
+        dataKey: "activated_permission_sets", 
+        keywords: ["activated permission set", "active permission sets"] 
+    },
+    { 
+        label: "total permission sets", 
+        dataKey: "total_permission_sets", 
+        keywords: ["permission set", "permission sets"] 
+    },
+    { 
+        label: "triggers", 
+        dataKey: "total_triggers", 
+        keywords: ["trigger", "triggers", "apex trigger"] 
+    },
+    { 
+        label: "active workflow rules", 
+        dataKey: "total_active_workflow_rules", 
+        keywords: ["workflow", "workflow rule", "active workflow"] 
+    },
+    { 
+        label: "flow", 
+        dataKey: "total_flow", 
+        keywords: ["flow", "flows"] 
+    },
+    { 
+        label: "alerts sent", 
+        dataKey: "total_alerts_sent", 
+        keywords: ["alert", "alerts", "email alerts"] 
+    },
+    { 
+        label: "field updates made", 
+        dataKey: "total_field_updates_made", 
+        keywords: ["field update", "field updates"] 
+    },
+    { 
+        label: "active flow", 
+        dataKey: "total_active_flow", 
+        keywords: ["active flow", "active flows"] 
+    },
+    { 
+        label: "classes", 
+        dataKey: "total_classes", 
+        keywords: ["class", "classes", "apex class"] 
+    },
+    { 
+        label: "custom email templates", 
+        dataKey: "total_custom_email_templates", 
+        keywords: ["email template", "templates", "custom email"] 
+    },
+    { 
+        label: "validation rules", 
+        dataKey: "total_validation_rules", 
+        keywords: ["validation rule", "validation rules"] 
+    },
+    { 
+        label: "pages", 
+        dataKey: "total_pages", 
+        keywords: ["page", "pages", "total pages"] 
+    },
+    { 
+        label: "lightning pages", 
+        dataKey: "total_lightning_pages", 
+        keywords: ["lightning page", "lightning pages"] 
+    },
+    { 
+        label: "visualforce pages", 
+        dataKey: "total_visualforce_pages", 
+        keywords: ["visualforce", "visualforce page", "vf pages"] 
+    },
+    { 
+        label: "external systems", 
+        dataKey: "total_external_systems", 
+        keywords: ["external systems", "integrated"] 
+    },
+    { 
+        label: "oauth configurations", 
+        dataKey: "total_oauth_configurations", 
+        keywords: ["oauth config"] 
+    },
+    { 
+        label: "active oauth policies", 
+        dataKey: "active_oauth_policies", 
+        keywords: ["oauth policies"] 
+    },
+    { 
+        label: "total jobs", 
+        dataKey: "total_jobs", 
+        keywords: ["jobs", "number of jobs"] 
+    },
+    { 
+        label: "total standard object", 
+        dataKey: "total_standard_objects_v2", 
+        keywords: ["standard object", "std objects"] 
+    },
+    { 
+        label: "total counts", 
+        dataKey: "total_counts", 
+        keywords: ["total counts", "record counts"] 
+    },
+    { 
+        label: "total unique objects counts", 
+        dataKey: "total_unique_objects_counts", 
+        keywords: ["unique objects", "unique counts"] 
+    },
+    { 
+        label: "average objects created per month", 
+        dataKey: "average_objects_created_per_month", 
+        keywords: ["avg created month", "monthly average"] 
+    },
+    { 
+        label: "total custom objects", 
+        dataKey: "total_custom_objects_v2", 
+        keywords: ["custom object count"] 
+    },
+    { 
+        label: "highest monthly counts", 
+        dataKey: "highest_monthly_counts", 
+        keywords: ["peak monthly", "highest month"] 
+    },
+    { 
+        label: "average count per year", 
+        dataKey: "average_count_per_year", 
+        keywords: ["yearly average", "avg per year"] 
+    },
+    { 
+        label: "average count per quarter", 
+        dataKey: "average_count_per_quarter", 
+        keywords: ["quarterly average", "avg per quarter"] 
+    },
+    { 
+        label: "reports and dashboards", 
+        dataKey: "total_reports_and_dashboards", 
+        keywords: ["reports and dashboards", "analytics total"] 
+    },
+    { 
+        label: "total reports", 
+        dataKey: "total_reports", 
+        keywords: ["reports", "total reports"] 
+    },
+    { 
+        label: "total dashboards", 
+        dataKey: "total_dashboards", 
+        keywords: ["dashboards", "total dashboards"] 
+    },
+    { 
+        label: "task type activities", 
+        dataKey: "total_task_type_activities", 
+        keywords: ["task activities", "task type"] 
+    },
+    { 
+        label: "total object in activities", 
+        dataKey: "total_object_in_activities", 
+        keywords: ["activity objects", "object in activities"] 
+    },
+    { 
+        label: "email type activities", 
+        dataKey: "total_email_type_activities", 
+        keywords: ["email activities", "email type"] 
+    },
+    { 
+        label: "total activities", 
+        dataKey: "total_activities", 
+        keywords: ["activities", "all activities"] 
+    }
+
+];
+function normalize(t){
+    return t.toLowerCase().replace(/[^a-z0-9 ]/g,"");
+}
+
+function findMetric(text){
+    for(let m of METRICS){
+        for(let w of m.keywords){
+            if(text.includes(w)) return m;
+        }
+    }
+    return null;
+}
+
+function getBotReply(input){
+    const metric = findMetric(normalize(input));
+    if(!metric) return "Please ask about correct metrics";
+    return `There are <b>${DASHBOARD_DATA[metric.dataKey]}</b> ${metric.label}.`;
+}
+
+/* UI FUNCTIONS */
+const chatBox = document.getElementById("chatBox");
+const userInput = document.getElementById("userInput");
+
+function addUser(text){
+    const div = document.createElement("div");
+    div.className = "message user";
+    div.innerText = text;
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function addBotThinking(){
+    const wrap = document.createElement("div");
+    wrap.className = "bot-wrapper";
+
+    const avatar = document.createElement("div");
+    avatar.className = "bot-avatar";
+    avatar.innerText = "🤖";
+
+    const msg = document.createElement("div");
+    msg.className = "message bot thinking";
+    msg.innerHTML = "Thinking<span class='dots'></span>";
+
+    wrap.appendChild(avatar);
+    wrap.appendChild(msg);
+    chatBox.appendChild(wrap);
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    return msg;
+}
+
+function sendMessage(){
+    const text = userInput.value.trim();
+    if(!text) return;
+
+    addUser(text);
+    userInput.value = "";
+
+    const thinkingMsg = addBotThinking();
+
+    setTimeout(() => {
+        thinkingMsg.classList.remove("thinking");
+        thinkingMsg.innerHTML = getBotReply(text);
+    }, 600); 
+}
+function clearChat(){
+    chatBox.innerHTML = "";
+}
+
+userInput.addEventListener("keypress", e=>{
+    if(e.key === "Enter") sendMessage();
+});
+</script>
+</body>
+</html>
