@@ -7,7 +7,7 @@
 
 <style>
 /* =========================
-   GLOBAL
+   GLOBAL (POWER BI / TABLEAU SAFE)
 ========================= */
 html, body {
     width: 100%;
@@ -16,19 +16,24 @@ html, body {
     padding: 0;
     font-family: "Segoe UI", sans-serif;
     background: #f4f6f9;
+    overflow: hidden; /* 🔥 prevent outer scroll */
+}
+
+body {
+    display: flex;
+    flex-direction: column;
 }
 
 /* =========================
-   CHAT CARD (FIXED BOX)
+   CHAT CONTAINER
 ========================= */
 .chat-container {
-    width: 90%;
-    max-width: 1100px;
-    height: 620px;                 /* ✅ FIXED CARD HEIGHT */
-    margin: 40px auto;
+    flex: 1;
+    width: 100%;
+    height: 100%;
     background: #ffffff;
-    border-radius: 14px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -38,20 +43,22 @@ html, body {
    HEADER
 ========================= */
 .chat-header {
-    padding: 20px;
-    font-size: 26px;
+    padding: 16px;
+    font-size: clamp(18px, 2.5vw, 26px);
     font-weight: 700;
     text-align: center;
     color: #1f3b57;
     border-bottom: 1px solid #ddd;
+    flex-shrink: 0;
 }
 
 /* =========================
-   CHAT BODY (SCROLLABLE)
+   CHAT BODY (ONLY SCROLL AREA)
 ========================= */
 .chat-box {
     flex: 1;
-    padding: 20px;
+    min-height: 0;          /* 🔥 CRITICAL FOR SMALL SCREENS */
+    padding: 16px;
     overflow-y: auto;
     background: #ffffff;
 }
@@ -60,14 +67,14 @@ html, body {
    USER MESSAGE
 ========================= */
 .message.user {
-    max-width: 70%;
-    padding: 16px 22px;
+    max-width: 85%;
+    padding: 14px 18px;
     margin-bottom: 14px;
     border-radius: 14px;
     background: #1f3b57;
     color: #ffffff;
     margin-left: auto;
-    font-size: 18px;
+    font-size: clamp(14px, 1.8vw, 18px);
     line-height: 1.5;
 }
 
@@ -82,45 +89,46 @@ html, body {
 }
 
 .bot-avatar {
-    width: 42px;
-    height: 42px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     background: #1f7aff;
     color: #ffffff;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
+    font-size: 18px;
     flex-shrink: 0;
 }
 
 .message.bot {
-    max-width: 70%;
-    padding: 16px 22px;
+    max-width: 85%;
+    padding: 14px 18px;
     border-radius: 14px;
     background: #eef3f9;
     color: #000000;
-    font-size: 18px;
+    font-size: clamp(14px, 1.8vw, 18px);
     line-height: 1.5;
 }
 
 /* =========================
-   INPUT AREA (FIXED BOTTOM)
+   INPUT AREA (FOOTER)
 ========================= */
 .chat-input {
-    padding: 14px;
+    padding: 12px;
     border-top: 1px solid #ddd;
     display: flex;
-    gap: 12px;
+    gap: 10px;
     align-items: center;
     background: #ffffff;
+    flex-shrink: 0;
 }
 
 .chat-input input {
     flex: 1;
-    padding: 14px 18px;
-    font-size: 18px;
-    height: 52px;
+    padding: 12px 16px;
+    font-size: clamp(14px, 1.8vw, 18px);
+    height: 48px;
     border-radius: 10px;
     border: 1px solid #bbb;
     outline: none;
@@ -130,12 +138,12 @@ html, body {
    BUTTONS
 ========================= */
 .icon-btn {
-    width: 52px;
-    height: 52px;
+    width: 48px;
+    height: 48px;
     border: none;
     border-radius: 10px;
     cursor: pointer;
-    font-size: 22px;
+    font-size: 20px;
     color: white;
     display: flex;
     align-items: center;
@@ -144,6 +152,16 @@ html, body {
 
 .send-btn { background: #2F4F6F; }
 .clear-btn { background: #ff4d4d; }
+
+/* =========================
+   MOBILE OPTIMIZATION
+========================= */
+@media (max-width: 600px) {
+    .message.user,
+    .message.bot {
+        max-width: 95%;
+    }
+}
 </style>
 </head>
 
@@ -151,6 +169,7 @@ html, body {
 
 <div class="chat-container">
     <div class="chat-header">PlatShift SalesForce Chatbot</div>
+
     <div class="chat-box" id="chatBox"></div>
 
     <div class="chat-input">
@@ -161,7 +180,9 @@ html, body {
 </div>
 
 <script>
-/* DATA */
+/* =========================
+   DATA
+========================= */
 const DASHBOARD_DATA = {
     total_objects: 14,
     total_fields: 279,
@@ -203,10 +224,10 @@ const DASHBOARD_DATA = {
     total_oauth_configurations: 12,
     active_oauth_policies: 12,
     total_jobs: 21,
-    total_standard_objects_v2: 3, 
+    total_standard_objects_v2: 3,
     total_counts: 11491,
     total_unique_objects_counts: 6,
-    average_objects_created_per_month: 64.20,
+    average_objects_created_per_month: 64.2,
     total_custom_objects_v2: 3,
     highest_monthly_counts: 2851,
     average_count_per_year: 718.19,
@@ -218,11 +239,11 @@ const DASHBOARD_DATA = {
     total_object_in_activities: 1,
     total_email_type_activities: 27,
     total_activities: 29
-    
-   
 };
 
-
+/* =========================
+   METRICS
+========================= */
 const METRICS = [
   
     { 
@@ -502,26 +523,27 @@ const METRICS = [
     }
 
 ];
+
 function normalize(t){
     return t.toLowerCase().replace(/[^a-z0-9 ]/g,"");
 }
 
 function findMetric(text){
-    for(let m of METRICS){
-        for(let w of m.keywords){
-            if(text.includes(w)) return m;
-        }
+    for(const m of METRICS){
+        if(m.keywords.some(k => text.includes(k))) return m;
     }
     return null;
 }
 
 function getBotReply(input){
     const metric = findMetric(normalize(input));
-    if(!metric) return "Please ask about correct metrics";
+    if(!metric) return "Please ask about correct metrics.";
     return `There are <b>${DASHBOARD_DATA[metric.dataKey]}</b> ${metric.label}.`;
 }
 
-/* UI FUNCTIONS */
+/* =========================
+   UI
+========================= */
 const chatBox = document.getElementById("chatBox");
 const userInput = document.getElementById("userInput");
 
@@ -536,21 +558,13 @@ function addUser(text){
 function addBotThinking(){
     const wrap = document.createElement("div");
     wrap.className = "bot-wrapper";
-
-    const avatar = document.createElement("div");
-    avatar.className = "bot-avatar";
-    avatar.innerText = "🤖";
-
-    const msg = document.createElement("div");
-    msg.className = "message bot thinking";
-    msg.innerHTML = "Thinking<span class='dots'></span>";
-
-    wrap.appendChild(avatar);
-    wrap.appendChild(msg);
+    wrap.innerHTML = `
+        <div class="bot-avatar">🤖</div>
+        <div class="message bot">Thinking...</div>
+    `;
     chatBox.appendChild(wrap);
     chatBox.scrollTop = chatBox.scrollHeight;
-
-    return msg;
+    return wrap.querySelector(".message.bot");
 }
 
 function sendMessage(){
@@ -560,13 +574,12 @@ function sendMessage(){
     addUser(text);
     userInput.value = "";
 
-    const thinkingMsg = addBotThinking();
-
+    const thinking = addBotThinking();
     setTimeout(() => {
-        thinkingMsg.classList.remove("thinking");
-        thinkingMsg.innerHTML = getBotReply(text);
-    }, 600); 
+        thinking.innerHTML = getBotReply(text);
+    }, 500);
 }
+
 function clearChat(){
     chatBox.innerHTML = "";
 }
@@ -575,6 +588,6 @@ userInput.addEventListener("keypress", e=>{
     if(e.key === "Enter") sendMessage();
 });
 </script>
-</body>
 
+</body>
 </html>
